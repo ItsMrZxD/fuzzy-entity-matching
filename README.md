@@ -5,8 +5,15 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 **Fuzzy entity resolution and record linkage between two CSV datasets — matches
-company names that are spelled differently across sources, scoring every match
-0–100. Built on RapidFuzz and pandas.**
+records, names, and identifiers that are spelled differently across sources,
+scoring every match 0–100. Built on RapidFuzz and pandas.**
+
+The matcher itself is general: it works on any CSV with a `name` column, so the
+same run handles company names, people, product titles, or free-text
+identifiers. The worked example throughout this README uses companies, and the
+one company-specific piece is the cleaning step, which strips trailing legal
+suffixes (`Inc`, `Ltd`, `LLC`, …) — harmless on other kinds of data, and easy
+to adjust for a different domain.
 
 The same company shows up as `Apple Inc.` in one system, `Apple` in another,
 and `Aple Inc` in a spreadsheet someone typed by hand. This tool links those
