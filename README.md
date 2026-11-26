@@ -4,15 +4,15 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**Fuzzy entity resolution and record linkage between two CSV datasets — matches
+Fuzzy entity resolution and record linkage between two CSV datasets. It matches
 records, names, and identifiers that are spelled differently across sources,
-scoring every match 0–100. Built on RapidFuzz and pandas.**
+and scores every match 0–100. Built on RapidFuzz and pandas.
 
 The matcher itself is general: it works on any CSV with a `name` column, so the
 same run handles company names, people, product titles, or free-text
 identifiers. The worked example throughout this README uses companies, and the
 one company-specific piece is the cleaning step, which strips trailing legal
-suffixes (`Inc`, `Ltd`, `LLC`, …) — harmless on other kinds of data, and easy
+suffixes (`Inc`, `Ltd`, `LLC`, …). That step is harmless on other kinds of data, and easy
 to adjust for a different domain.
 
 The same company shows up as `Apple Inc.` in one system, `Apple` in another,
@@ -20,7 +20,7 @@ and `Aple Inc` in a spreadsheet someone typed by hand. This tool links those
 records: every row in dataset A is matched to its closest row in dataset B,
 with a confidence score you can threshold on. Typical uses are deduplication,
 CRM and vendor-list reconciliation, and joining datasets that share no common
-ID — the classic record-linkage problem.
+ID.
 
 Results are split into high- and low-confidence files around a configurable
 threshold, so the confident matches can be used directly while the borderline
@@ -34,8 +34,8 @@ ones go to a human for review.
   before comparison, while preserving original spellings in the output
 - **Confidence scoring** (0–100) on every match, with a tunable high/low
   threshold
-- **Three CSV outputs** — all matches, high confidence, and low confidence
-- **Self-seeding sample data**, so the tool runs end to end on a fresh clone
+- **Three CSV outputs**: all matches, high confidence, and low confidence
+- **Sample data generated on first run**, so the tool runs end to end on a fresh clone
   with no data of your own
 - Deterministic, stable-sorted output that does not vary between runs
 - Progress bar for large datasets, and a `--compare` mode that benchmarks all
@@ -49,7 +49,7 @@ Python 3.11+. Dependencies are pinned in `requirements.txt`:
 |---|---|
 | `pandas>=2.0` | CSV loading and the results table |
 | `rapidfuzz>=3.0` | the fuzzy string similarity metrics |
-| `tqdm>=4.66` | progress bar (optional — matching works without it) |
+| `tqdm>=4.66` | progress bar (optional; matching works without it) |
 
 ## Installation
 
@@ -69,8 +69,8 @@ python main.py
 
 On the first run, if `data/dataset_a.csv` and `data/dataset_b.csv` do not
 exist, small sample datasets with intentionally messy company names are
-generated automatically. Drop in your own CSVs — one column named `name` — to
-match real data. Existing files are never overwritten.
+generated automatically. To match real data, use your own CSVs with one column
+named `name`. Existing files are never overwritten.
 
 Common variations:
 
@@ -91,7 +91,7 @@ python main.py --data-dir ./mydata --output-dir ./results
 | `--threshold N` | `85` | confidence cutoff between high and low matches (0–100) |
 | `--scorer {token_sort,token_set,wratio}` | `wratio` | similarity metric to use |
 | `--only-above-threshold` | off | export only matches scoring at or above the threshold |
-| `--compare` | off | benchmark all three metrics side by side **instead of** exporting matches |
+| `--compare` | off | benchmark all three metrics side by side instead of exporting matches |
 | `--no-progress` | off | disable the tqdm progress bar |
 
 ### Output files
@@ -102,21 +102,21 @@ A default run writes three files to `output/`:
 |---|---|
 | `matches.csv` | every A record with its best B match |
 | `matches_high_confidence.csv` | matches scoring at or above the threshold |
-| `matches_low_confidence.csv` | matches below the threshold — the review queue |
+| `matches_low_confidence.csv` | matches below the threshold, to review |
 
 Each has the columns `original_name_A`, `matched_name_B`, `confidence_score`.
 
 ## How the fuzzy matching works
 
-1. **Cleaning** — every name is lowercased, punctuation is replaced with
+1. **Cleaning**: every name is lowercased, punctuation is replaced with
    spaces, whitespace is collapsed, and trailing legal suffixes (`Co`,
    `Company`, `Corp`, `Corporation`, `Inc`, `Incorporated`, `LLC`, `LLP`,
    `Ltd`, `Limited`, `PLC`) are stripped. `"Coca-Cola Company, Inc."` and
    `"coca cola"` clean to the same string.
-2. **Matching** — for each cleaned name in A, RapidFuzz's `process.extractOne`
+2. **Matching**: for each cleaned name in A, RapidFuzz's `process.extractOne`
    scans *every* cleaned name in B and returns the single best match with a
    0–100 similarity score.
-3. **Reporting** — results keep the *original* spellings from both files, are
+3. **Reporting**: results keep the *original* spellings from both files, are
    sorted by confidence descending with a stable sort (so output is
    deterministic across runs and platforms), and are split into high/low
    confidence groups around the threshold.
@@ -156,8 +156,8 @@ Two ways:
 
 Raising it trades recall for precision. On the sample data, raising the
 threshold from 85 to 95 moves borderline-but-true matches like
-*Proctor & Gamble → Procter & Gamble Co* (92.9) into the low-confidence file —
-exactly the group a human should review before trusting.
+*Proctor & Gamble → Procter & Gamble Co* (92.9) into the low-confidence file,
+which is the group a human should review before trusting.
 
 ## Example output
 
@@ -208,9 +208,9 @@ CI runs both against Python 3.11 and 3.14 on every push.
 
 - Each input CSV has one column named `name`; rows with missing or blank names
   are dropped with a console note instead of crashing.
-- Legal suffixes are only stripped from the **end** of a name, so a word like
+- Legal suffixes are only stripped from the end of a name, so a word like
   *Limited* in the middle of a name survives cleaning.
-- Every A record gets its best B match even when nothing is truly similar —
+- Every A record gets its best B match even when nothing is truly similar;
   that is what the confidence score and threshold are for. The sample's
   *Oracle Corporation* (only in B) is never claimed by a good match.
 - **Character-based fuzzy matching cannot resolve acronyms.** *International
@@ -224,4 +224,4 @@ CI runs both against Python 3.11 and 3.14 on every push.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
